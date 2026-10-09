@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="面積魔法師：應用題" />
+  <title>面積魔法師：應用題</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pink: #ff7eb6; --pink-deep: #ee4d93;
+      --sky: #5cc8ff; --sky-deep: #2a9adf;
+      --lemon: #ffe066; --lemon-deep: #e4b82a;
+      --lilac: #c9b6ff; --lilac-deep: #9b7af0;
+      --mint: #7eecc8; --mint-deep: #3cbc9a;
+      --ink: #3b2a55; --soft: #7a6588;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-l: env(safe-area-inset-left, 0px);
+      --safe-r: env(safe-area-inset-right, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+    body {
+      position: fixed; inset: 0;
+      font-family: "Noto Sans TC", "PingFang HK", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255, 238, 190, 0.26) 0%, rgba(255, 238, 190, 0) 34%),
+        linear-gradient(122deg, rgba(255, 250, 220, 0.34) 0%, rgba(255, 250, 220, 0) 44%),
+        linear-gradient(206deg, rgba(255, 240, 200, 0.16) 12%, rgba(255, 240, 200, 0) 46%),
+        linear-gradient(162deg, #fffefb 0%, #fff8e6 36%, #fffbf2 70%, #fffffe 100%);
+      user-select: none;
+    }
+    .fun-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .deco { position: absolute; }
+    .deco svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .deco.para svg { aspect-ratio: 24 / 14; }
+    .deco.tri svg { aspect-ratio: 22 / 18; }
+    .deco.trap svg { aspect-ratio: 24 / 14; }
+    .deco-lt { top: 4%; left: 11%; width: 34vmin; height: 22vmin; transform: rotate(-26deg); }
+    .deco-lbl { top: 36%; left: 1%; width: 29vmin; height: 19vmin; transform: rotate(17deg); }
+    .deco-lbr { top: 68%; left: 16%; width: 32vmin; height: 21vmin; transform: rotate(-9deg); }
+    .deco-rt { top: 6%; right: 3%; width: 33vmin; height: 21vmin; transform: rotate(11deg); }
+    .deco-rbl { top: 38%; right: 14%; width: 28vmin; height: 18vmin; transform: rotate(-21deg); }
+    .deco-rbr { top: 70%; right: 5%; width: 31vmin; height: 20vmin; transform: rotate(15deg); }
+    button, input { font-family: inherit; }
+    button { cursor: pointer; touch-action: manipulation; }
+    input { user-select: text; -webkit-user-select: text; }
+
+    @keyframes popIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+    @keyframes bounce { 0% { transform: scale(1); } 35% { transform: scale(0.88); } 70% { transform: scale(1.08); } 100% { transform: scale(1); } }
+    @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+    .bounce { animation: bounce 0.35s ease; }
+    .shake { animation: shake 0.4s ease; }
+
+    .app {
+      position: relative; z-index: 1;
+      height: 100%; width: 100%; overflow: hidden; display: flex;
+      padding: calc(6px + var(--safe-t)) calc(8px + var(--safe-r)) calc(6px + var(--safe-b)) calc(8px + var(--safe-l));
+    }
+    .screen {
+      display: none; width: min(1280px, 100%); margin: 0 auto;
+      height: 100%; min-height: 0; flex-direction: column; overflow: hidden;
+      animation: popIn 0.35s ease;
+    }
+    .screen.active { display: flex; }
+    .card {
+      background: rgba(255,255,255,0.92); border: 3px solid #fff; border-radius: 26px;
+      box-shadow: 0 14px 30px rgba(155, 122, 240, 0.18); min-height: 0; color: var(--ink);
+    }
+    .candy {
+      border: 0; border-radius: 999px; font-weight: 900; padding: 10px 18px;
+      transition: transform 0.12s ease, filter 0.12s ease;
+    }
+    .candy:hover { filter: brightness(1.05); }
+    .candy:active { transform: translateY(4px) scale(0.96); box-shadow: 0 2px 0 rgba(0,0,0,0.18) !important; animation: bounce 0.3s ease; }
+    .candy:disabled { filter: saturate(0.55); pointer-events: none; }
+    .sky { background: var(--sky); color: #0a3a5c; box-shadow: 0 6px 0 var(--sky-deep); }
+    .pink { background: var(--pink); color: #fff; box-shadow: 0 6px 0 var(--pink-deep); }
+    .lemon { background: var(--lemon); color: var(--ink); box-shadow: 0 6px 0 var(--lemon-deep); }
+    .mint { background: var(--mint); color: #165f4c; box-shadow: 0 6px 0 var(--mint-deep); }
+    .lilac { background: var(--lilac); color: #fff; box-shadow: 0 6px 0 var(--lilac-deep); }
+    .ghost { background: #fff; color: var(--soft); box-shadow: 0 5px 0 #ecd6de; }
+
+    #screen-login { align-items: center; justify-content: center; }
+    .login { width: min(400px, 100%); padding: 22px 18px 16px; text-align: center; }
+    .mascot {
+      width: 72px; height: 72px; margin: 0 auto 6px; border-radius: 50%;
+      display: grid; place-items: center; font-size: 36px; background: #fff;
+      box-shadow: 0 8px 0 #ffc2e0;
+      animation: floaty 2.8s ease-in-out infinite;
+    }
+    .mascot svg { width: 44px; height: auto; display: block; }
+    .title {
+      font-family: "Fredoka", "Noto Sans TC", sans-serif;
+      font-size: clamp(20px, 4.4vh, 30px); font-weight: 900; letter-spacing: 0.03em;
+      margin-bottom: 14px; line-height: 1.3; white-space: nowrap;
+      background: none; border: 0; box-shadow: none; padding: 0; text-shadow: none;
+    }
+    .title span:nth-child(odd) { color: var(--pink-deep); }
+    .title span:nth-child(even) { color: var(--lilac-deep); }
+    .field { text-align: left; margin-bottom: 10px; }
+    .field label { display: block; font-weight: 900; font-size: 15px; margin-bottom: 4px; }
+    .field input {
+      width: 100%; border: 3px solid #ffe1ec; border-radius: 16px;
+      padding: 10px 12px; font-size: 18px; font-weight: 800; outline: none; background: #fff;
+    }
+    .field input:focus { border-color: var(--pink); }
+    .start { width: 100%; font-size: 22px; padding: 12px; margin: 6px 0 10px; }
+    .teacher-btn {
+      width: 64px; height: 64px; border-radius: 50%; font-size: 13px; line-height: 1.15;
+      padding: 0; margin: 4px auto 0; display: grid; place-items: center;
+    }
+    .login-acts {
+      display: flex; flex-wrap: nowrap; justify-content: center; align-items: center;
+      gap: 22px; margin-top: 4px;
+    }
+    .login-acts .teacher-btn {
+      margin: 0; padding: 0; width: 64px; height: 64px; min-width: 64px;
+      flex: 0 0 64px; font-size: 13px; line-height: 1.2;
+    }
+    .rank-note {
+      flex-shrink: 0; font-family: "Fredoka", "Noto Sans TC", sans-serif;
+      font-weight: 900; font-size: clamp(24px, 3.6vh, 32px); line-height: 1.3;
+      color: var(--pink-deep); text-align: center; letter-spacing: 0.04em;
+    }
+    tr.r1 td { background: #fff6c9; }
+    tr.r2 td { background: #eef2f7; }
+    tr.r3 td { background: #f8ead8; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; margin-bottom: 4px; overflow: visible; }
+    .pill {
+      background: #fff; color: var(--ink); border-radius: 999px; padding: 6px 12px;
+      font-weight: 800; font-size: 16px; box-shadow: 0 4px 0 #f0d7e2; white-space: nowrap;
+    }
+    .timer-wrap { position: relative; flex-shrink: 0; }
+    .timer { font-variant-numeric: tabular-nums; background: #fff4cc; min-width: 92px; text-align: center; }
+    .timer.low, .timer.hit { background: #ffd0d8; color: #b42318; }
+    .timer.hit { animation: shake 0.4s ease; }
+    .time-hit {
+      position: absolute; left: 50%; top: 50%; z-index: 3;
+      font-weight: 900; font-size: 16px; color: #b42318;
+      pointer-events: none; opacity: 0; white-space: nowrap;
+      text-shadow: 0 1px 0 #fff, 0 0 8px #fff;
+    }
+    .time-hit.show { animation: timeHitPop 0.7s ease; }
+    @keyframes timeHitPop {
+      0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
+      22% { opacity: 1; transform: translate(-50%, -110%) scale(1.12); }
+      100% { opacity: 0; transform: translate(-50%, -160%) scale(0.96); }
+    }
+    .tiny { padding: 6px 12px; font-size: 13px; }
+
+    .play { flex: 1; min-height: 0; overflow: hidden; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+    .task-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+    .task-h h2 { font-size: clamp(18px, 2.8vh, 24px); line-height: 1.3; }
+    .task-h p { font-size: 16px; font-weight: 900; color: var(--soft); white-space: nowrap; }
+    .hintbar {
+      flex-shrink: 0; font-size: clamp(18px, 3vh, 22px); font-weight: 900; color: #5a4a72;
+      background: #e8fff6; border-radius: 12px; padding: 8px 12px; text-align: center;
+      line-height: 1.4; white-space: normal; overflow: hidden;
+    }
+    .board {
+      flex: 1; min-height: 0; position: relative;
+      display: flex; align-items: stretch; justify-content: center;
+      background: linear-gradient(180deg, #fff, #fff8e8);
+      border-radius: 22px; overflow: hidden;
+      box-shadow: inset 0 0 0 2px rgba(228, 184, 42, 0.35);
+      touch-action: none;
+    }
+    .board::before, .board::after {
+      content: ""; position: absolute; width: 54px; height: 14px; z-index: 2; pointer-events: none;
+      background: #ffe066;
+      box-shadow: 0 2px 0 rgba(228, 184, 42, 0.35);
+    }
+    .board::before { top: 10px; left: 4px; transform: rotate(-45deg); }
+    .board::after { top: 12px; right: 4px; transform: rotate(45deg); }
+    #scene { width: 100%; height: 100%; display: block; touch-action: none; }
+
+    .choice-row { display: flex; gap: 8px; flex-shrink: 0; align-items: stretch; }
+    .choice-row .candy {
+      flex: 1; font-size: clamp(16px, 2.5vh, 20px); padding: 12px 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      text-align: center; line-height: 1.2;
+    }
+    .opt-col { display: none; flex-direction: column; gap: 8px; flex-shrink: 0; }
+    .opt-col.show { display: flex; }
+    .opt-col .candy { width: 100%; text-align: center; font-size: clamp(17px, 2.6vh, 22px); padding: 12px 8px; }
+
+    .toast {
+      display: none; flex-shrink: 0; border-radius: 16px; padding: 6px 12px;
+      font-weight: 900; font-size: 16px; text-align: center; line-height: 1.3;
+      letter-spacing: 0.02em;
+    }
+    .toast.show { display: block; }
+    .toast.good { background: #e4faf2; border: 2px solid #7eecc8; color: #165f4c; }
+    .toast.bad { background: #fff1f1; border: 2px solid #ffb4b4; color: #b42318; }
+
+    .report {
+      position: fixed; inset: 0; background: rgba(59, 42, 85, 0.42);
+      display: none; place-items: center; z-index: 25; padding: 16px;
+    }
+    .report.show { display: grid; }
+    .report-card {
+      width: min(520px, 100%); background: #fff; border-radius: 32px;
+      padding: 22px 20px 18px; text-align: center; border: 4px solid #fff;
+      box-shadow: 0 18px 40px rgba(126, 236, 200, 0.28); animation: popIn 0.4s ease; color: var(--ink);
+    }
+    .report-card h2 { font-size: clamp(22px, 3.4vh, 28px); margin: 8px 0 10px; }
+    .report-card p { font-weight: 800; line-height: 1.55; margin: 8px 0; font-size: 16px; }
+    .tip {
+      background: #e8fff6; border-radius: 18px; padding: 12px 14px; margin: 12px 0 16px;
+      font-weight: 800; line-height: 1.6; text-align: left; white-space: pre-wrap;
+    }
+
+    .dash-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-shrink: 0; margin-bottom: 8px; }
+    .dash-h h1 { font-family: "Fredoka", "Noto Sans TC", sans-serif; font-size: clamp(20px, 3vh, 28px); color: var(--ink); }
+    .dash-h .acts { display: flex; gap: 8px; margin: 0; }
+    .dash { flex: 1; min-height: 0; overflow: hidden; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex-shrink: 0; }
+    .stat { border-radius: 16px; padding: 10px; }
+    .stat b { display: block; font-size: 12px; opacity: 0.8; }
+    .stat strong { font-size: clamp(16px, 2.6vh, 24px); display: block; line-height: 1.2; }
+    .s1 { background: #d9f8ee; } .s2 { background: #ffe1ea; } .s3 { background: #efe6ff; }
+    .tools { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 8px; flex-wrap: wrap; }
+    .tools select, .tools button.tiny { border: 2px solid #ffe1ec; border-radius: 12px; padding: 4px 8px; font-weight: 800; background: #fff; }
+    .tool-filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .dash-src { font-size: 12px; font-weight: 800; color: var(--soft); }
+    .dash-count { font-size: 12px; font-weight: 800; color: var(--soft); }
+    .records { flex: 1; min-height: 0; overflow: auto; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(16,36,63,0.08); font-size: 12px; }
+    th { background: #e8fff6; position: sticky; top: 0; z-index: 2; white-space: nowrap; }
+    th.col-h { padding-right: 4px; }
+    .col-sort { border: 0; background: transparent; font: inherit; font-weight: 900; cursor: pointer; padding: 0; }
+    th.sorted .col-sort { color: #3cbc9a; }
+    .filter-btn {
+      border: 0; background: #d9f8ee; color: var(--ink); cursor: pointer;
+      border-radius: 8px; width: 22px; height: 22px; margin-left: 4px;
+      font-size: 12px; font-weight: 900; line-height: 1; vertical-align: middle;
+    }
+    .filter-btn.on { background: var(--mint-deep); color: #fff; }
+    .score-cell { font-variant-numeric: tabular-nums; font-weight: 900; text-align: center; }
+    th.score-h, td.rank-cell { text-align: center; font-variant-numeric: tabular-nums; }
+    tr.hi .score-cell { color: #1a8f7c; }
+    tr.lo .score-cell { color: #b42318; }
+    .diag-cell { white-space: pre-line; }
+    .empty { text-align: center; padding: 20px; font-weight: 800; color: var(--soft); }
+    .filter-menu {
+      position: fixed; z-index: 30; width: min(280px, calc(100vw - 16px));
+      background: #fff; border-radius: 18px; padding: 10px;
+      box-shadow: 0 16px 36px rgba(59,42,85,0.24); border: 2px solid #ffe1ec;
+      display: none; flex-direction: column; gap: 8px; max-height: min(420px, 70vh);
+    }
+    .filter-menu.show { display: flex; }
+    .filter-menu .fm-title { font-weight: 900; font-size: 14px; text-align: left; }
+    .filter-menu .fm-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-menu .fm-acts button {
+      border: 0; border-radius: 999px; font-weight: 900; padding: 6px 10px; font-size: 12px;
+      background: #e8fff6; color: var(--ink); cursor: pointer;
+    }
+    .filter-menu input[type="search"] {
+      width: 100%; border: 2px solid #ffe1ec; border-radius: 12px;
+      padding: 6px 8px; font-weight: 800; font-size: 14px;
+    }
+    .filter-menu .opts { overflow: auto; text-align: left; flex: 1; min-height: 80px; }
+    .filter-menu label { display: flex; gap: 8px; align-items: flex-start; padding: 5px 2px; font-weight: 800; font-size: 13px; cursor: pointer; }
+    .filter-menu label input { margin-top: 2px; }
+
+    .modal { position: fixed; inset: 0; background: rgba(59,42,85,0.4); display: none; place-items: center; z-index: 20; padding: 16px; }
+    .modal.show { display: grid; }
+    .modal-card { width: min(360px, 100%); background: #fff; border-radius: 24px; padding: 18px; text-align: center; color: var(--ink); }
+    .modal-card input {
+      width: 100%; border: 3px solid #ffe1ec; border-radius: 14px;
+      padding: 10px; font-size: 20px; font-weight: 800; text-align: center; margin: 10px 0;
+    }
+    canvas#confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 40; }
+
+    @media (max-height: 720px) {
+      .mascot { width: 56px; height: 56px; font-size: 26px; }
+      .mascot svg { width: 34px; }
+      .teacher-btn, .login-acts .teacher-btn { width: 52px; height: 52px; min-width: 52px; flex-basis: 52px; font-size: 12px; }
+      .choice-row .candy { padding: 10px 6px; font-size: 16px; }
+      .hintbar { font-size: 17px; padding: 6px 10px; }
+      .opt-col .candy { padding: 8px 6px; font-size: 16px; }
+    }
+    @media print {
+      html, body, .app, .screen.active { position: static; height: auto; overflow: visible; }
+      .no-print, .fun-bg, canvas, .report, .modal, .filter-menu, .filter-btn { display: none !important; }
+      .records { overflow: visible; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <div class="fun-bg" aria-hidden="true">
+    <div class="deco deco-lt para">
+      <svg viewBox="0 0 24 14" preserveAspectRatio="xMidYMid meet" focusable="false"><polygon points="2,3 16,3 22,13 8,13" fill="#ffd000" fill-opacity="0.65"/></svg>
+    </div>
+    <div class="deco deco-lbl tri">
+      <svg viewBox="0 0 22 18" preserveAspectRatio="xMidYMid meet" focusable="false"><polygon points="11,1 21,16 1,16" fill="#5eb8e8" fill-opacity="0.6"/></svg>
+    </div>
+    <div class="deco deco-lbr trap">
+      <svg viewBox="0 0 24 14" preserveAspectRatio="xMidYMid meet" focusable="false"><polygon points="2,1 14,1 22,13 2,13" fill="#f08aa0" fill-opacity="0.65"/></svg>
+    </div>
+    <div class="deco deco-rt tri">
+      <svg viewBox="0 0 22 18" preserveAspectRatio="xMidYMid meet" focusable="false"><polygon points="2,16 12,1 20,15" fill="#7dcea6" fill-opacity="0.6"/></svg>
+    </div>
+    <div class="deco deco-rbl trap">
+      <svg viewBox="0 0 24 14" preserveAspectRatio="xMidYMid meet" focusable="false"><polygon points="5,1 19,1 23,13 1,13" fill="#c9a6e8" fill-opacity="0.65"/></svg>
+    </div>
+    <div class="deco deco-rbr para">
+      <svg viewBox="0 0 24 14" preserveAspectRatio="xMidYMid meet" focusable="false"><polygon points="3,2 18,2 21,12 6,12" fill="#f0a04a" fill-opacity="0.6"/></svg>
+    </div>
+  </div>
+  <canvas id="confetti"></canvas>
+  <div class="app">
+    <section id="screen-login" class="screen active">
+      <div class="card login">
+        <div class="mascot" aria-hidden="true">
+          <svg viewBox="0 0 40 36" focusable="false">
+            <defs>
+              <linearGradient id="mascotGold" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffe566"/>
+                <stop offset="1" stop-color="#ffc107"/>
+              </linearGradient>
+            </defs>
+            <polygon points="12,2 26,2 30,11 16,11" fill="url(#mascotGold)" stroke="#3b2a55" stroke-width="1.3" stroke-linejoin="round"/>
+            <polygon points="3,33 16,33 9.5,15" fill="url(#mascotGold)" stroke="#3b2a55" stroke-width="1.3" stroke-linejoin="round"/>
+            <polygon points="21,17 35,17 38,33 19,33" fill="url(#mascotGold)" stroke="#3b2a55" stroke-width="1.3" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 class="title" id="titleWave"></h1>
+        <div class="field">
+          <label for="classId">班別</label>
+          <input id="classId" maxlength="8" placeholder="5A" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="studentId">學號</label>
+          <input id="studentId" maxlength="6" placeholder="01" inputmode="numeric" autocomplete="off" />
+        </div>
+        <button class="candy pink start" id="startBtn">開始任務</button>
+        <div class="login-acts">
+          <button class="candy mint teacher-btn" id="rankBtn">學生<br>排行</button>
+          <button class="candy lilac teacher-btn" id="teacherBtn">老師<br>後台</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-game" class="screen">
+      <div class="topbar">
+        <div class="pill" id="playerPill">5A 01</div>
+        <div class="pill" id="qPill">第 1／20 題</div>
+        <div class="timer-wrap">
+          <div class="pill timer" id="timer">⏱️ 00:00</div>
+          <span class="time-hit" id="timeHit" aria-hidden="true">+30秒</span>
+        </div>
+        <button class="candy ghost tiny no-print" id="backLoginBtn">主頁</button>
+      </div>
+      <div class="card play">
+        <div class="task-h">
+          <h2 id="taskTitle">任務一：看公式</h2>
+          <p id="taskKind">平行四邊形</p>
+        </div>
+        <div class="hintbar" id="hintBar">求面積</div>
+        <div class="board" id="board">
+          <canvas id="scene"></canvas>
+        </div>
+        <div class="toast" id="feedToast"></div>
+        <div class="opt-col" id="phase2Acts"></div>
+      </div>
+    </section>
+
+    <section id="screen-dash" class="screen">
+      <div class="dash-h">
+        <h1>老師後台</h1>
+        <div class="acts no-print">
+          <button class="candy lemon tiny" id="printBtn">列印</button>
+          <button class="candy sky tiny" id="refreshDashBtn">重新整理</button>
+          <button class="candy ghost tiny" id="dashBackBtn">返回</button>
+        </div>
+      </div>
+      <div class="card dash">
+        <div class="stats" id="analysisCards"></div>
+        <div class="tools">
+          <strong>全班紀錄 <small id="dashSource" class="dash-src"></small></strong>
+          <div class="tool-filters">
+            <select id="classFilter" aria-label="班別"></select>
+            <span class="dash-count" id="dashCount"></span>
+            <button type="button" class="tiny" id="clearFiltersBtn">清除篩選</button>
+          </div>
+        </div>
+        <div class="records" id="studentRecords"></div>
+      </div>
+    </section>
+
+    <section id="screen-rank" class="screen">
+      <div class="dash-h">
+        <h1>學生排行</h1>
+        <div class="acts no-print">
+          <button class="candy sky tiny" id="rankRefreshBtn">重新整理</button>
+          <button class="candy ghost tiny" id="rankBackBtn">返回</button>
+        </div>
+      </div>
+      <div class="card dash">
+        <p class="rank-note">✨ 數學之星 ✨</p>
+        <div class="records" id="rankRecords"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="report" id="reportModal">
+    <div class="report-card">
+      <div class="mascot">🏆</div>
+      <h2>成績診斷卡</h2>
+      <p id="reportScore"></p>
+      <div class="tip" id="reportTip"></div>
+      <button class="candy pink" id="reportBackBtn">完成</button>
+    </div>
+  </div>
+
+  <div id="dashFilterMenu" class="filter-menu"></div>
+
+  <div class="modal" id="pinModal">
+    <div class="modal-card">
+      <h3>老師後台</h3>
+      <input id="pinInput" type="password" maxlength="8" inputmode="numeric" autocomplete="off" />
+      <div class="choice-row">
+        <button class="candy ghost" id="pinCancel">取消</button>
+        <button class="candy lilac" id="pinOk">確認</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyGGhtjy7bKzw9M-divK5BZYL0mGcHJwcNoV_xv8VAUalMu_U9ptg8A8wIRQ8cpvQxv/exec";
+      const GAME_ID = "p5ma-ch7";
+      const CHAPTER = "p5ma-ch7";
+      const STORE_KEY = "p5ma-ch7-v1";
+      const TEACHER_PIN = "2246";
+      const TOTAL = 20;
+      const PENALTY_SECS = 30;
+      const TITLE = "面積魔法師：應用題";
+      const STAGE_NAME = { 1: "任務一：看公式", 2: "任務二：看資料", 3: "任務三：看問法" };
+      const MISS_ORDER = ["formula", "unit", "paren", "half", "slant", "match", "area", "qty", "join"];
+      const MISS_KEY = {
+        formula: "missFormula", unit: "missUnit", paren: "missParen", half: "missHalf",
+        slant: "missSlant", match: "missMatch", area: "missArea", qty: "missQty", join: "missJoin"
+      };
+      const MISS_LABEL = {
+        formula: "公式用錯圖形", unit: "單位未統一", paren: "漏加括號", half: "漏除以2",
+        slant: "誤用斜邊或周界", match: "底和高不對應", area: "未先求面積", qty: "未算數量", join: "未算拼砌"
+      };
+      const FILL = "rgba(126,236,200,0.55)";
+      const FILL_SOFT = "rgba(255,224,150,0.42)";
+      const INK = "#1a3d68";
+
+      function figPara(base, height, labels) {
+        const skew = 2;
+        return {
+          polys: [{ pts: [[0, 0], [base, 0], [base + skew, height], [skew, height]], fill: FILL }],
+          dashes: [[[skew, 0], [skew, height]]],
+          rights: [{ c: [skew, 0], a: [base, 0], b: [skew, height] }],
+          labels: labels
+        };
+      }
+      function figTri(base, height, labels, right) {
+        const topX = right ? 0 : Math.round(base * 0.35);
+        const fig = {
+          polys: [{ pts: [[0, 0], [base, 0], [topX, height]], fill: FILL }],
+          labels: labels
+        };
+        if (right) {
+          fig.rights = [{ c: [0, 0], a: [base, 0], b: [0, height] }];
+        } else {
+          fig.dashes = [[[topX, 0], [topX, height]]];
+          fig.rights = [{ c: [topX, 0], a: [base, 0], b: [topX, height] }];
+        }
+        return fig;
+      }
+      function figTrap(top, bottom, height, labels) {
+        const inset = Math.max(1, (bottom - top) / 2);
+        return {
+          polys: [{ pts: [[0, 0], [bottom, 0], [bottom - inset, height], [inset, height]], fill: FILL }],
+          dashes: [[[inset, 0], [inset, height]]],
+          rights: [{ c: [inset, 0], a: [bottom, 0], b: [inset, height] }],
+          labels: labels
+        };
+      }
+
+      function directPara(b, h) {
+        const area = b * h;
+        return {
+          stage: 1, kind: "平行四邊形", hint: "求面積", reveal: "面積＝底×高",
+          fig: figPara(b, h, [
+            { t: b + " cm", at: [b / 2, 0], side: "s" },
+            { t: h + " cm", at: [2, h / 2], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: b + "×" + h + "＝" + area + " cm²" },
+            { miss: "formula", label: b + "×" + h + "÷2＝" + (area / 2) + " cm²", msg: "請用底×高。請再計算。" },
+            { miss: "formula", label: b + "＋" + h + "＝" + (b + h) + " cm", msg: "請用底×高。請再計算。" }
+          ]
+        };
+      }
+      function directTri(b, h) {
+        const area = b * h / 2;
+        return {
+          stage: 1, kind: "三角形", hint: "求面積", reveal: "面積＝底×高÷2",
+          fig: figTri(b, h, [
+            { t: b + " cm", at: [b / 2, 0], side: "s" },
+            { t: h + " cm", at: [0, h / 2], side: "w" }
+          ], true),
+          opts: [
+            { ok: true, label: b + "×" + h + "÷2＝" + area + " cm²" },
+            { miss: "half", label: b + "×" + h + "＝" + (b * h) + " cm²", msg: "請記得除以2。請再計算。" },
+            { miss: "formula", label: b + "＋" + h + "＝" + (b + h) + " cm", msg: "請用底×高÷2。請再計算。" }
+          ]
+        };
+      }
+      function directTrap(top, bot, h) {
+        const area = (top + bot) * h / 2;
+        const inset = (bot - top) / 2;
+        return {
+          stage: 1, kind: "梯形", hint: "求面積", reveal: "面積＝(上底＋下底)×高÷2",
+          fig: figTrap(top, bot, h, [
+            { t: "上底 " + top + " cm", at: [bot / 2, h], side: "n" },
+            { t: "下底 " + bot + " cm", at: [bot / 2, 0], side: "s" },
+            { t: h + " cm", at: [inset, h / 2], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: "(" + top + "＋" + bot + ")×" + h + "÷2＝" + area + " cm²" },
+            { miss: "half", label: "(" + top + "＋" + bot + ")×" + h + "＝" + (area * 2) + " cm²", msg: "請記得除以2。請再計算。" },
+            { miss: "formula", label: top + "×" + h + "＝" + (top * h) + " cm²", msg: "請用(上底＋下底)×高÷2。請再計算。" }
+          ]
+        };
+      }
+      function unitPara(base, cm) {
+        const hM = cm / 100;
+        const area = base * hM;
+        return {
+          stage: 2, kind: "平行四邊形", hint: cm + "厘米要化成米，求面積", reveal: "先把高化成米",
+          fig: figPara(8, 5, [
+            { t: "底 " + base + "米", at: [4, 0], side: "s" },
+            { t: "高 " + cm + "厘米", at: [2, 2.5], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: base + "×" + hM + "＝" + area + " m²" },
+            { miss: "unit", label: base + "×" + cm + "＝" + (base * cm) + " m²", msg: "請先統一單位。請再計算。" },
+            { miss: "formula", label: base + "×" + hM + "÷2＝" + (area / 2) + " m²", msg: "請用底×高。請再計算。" }
+          ]
+        };
+      }
+      function unitTri(base, cm) {
+        const hM = cm / 100;
+        const area = base * hM / 2;
+        return {
+          stage: 2, kind: "三角形", hint: cm + "厘米要化成米，求面積", reveal: "先把高化成米",
+          fig: figTri(8, 5, [
+            { t: "底 " + base + "米", at: [4, 0], side: "s" },
+            { t: "高 " + cm + "厘米", at: [0, 2.5], side: "w" }
+          ], true),
+          opts: [
+            { ok: true, label: base + "×" + hM + "÷2＝" + area + " m²" },
+            { miss: "unit", label: base + "×" + cm + "÷2＝" + (base * cm / 2) + " m²", msg: "請先統一單位。請再計算。" },
+            { miss: "half", label: base + "×" + hM + "＝" + (base * hM) + " m²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      function unitTrap(top, bot, cm) {
+        const hM = cm / 100;
+        const area = (top + bot) * hM / 2;
+        const s = 2;
+        const drawTop = top * s, drawBot = bot * s, drawH = hM * s;
+        const inset = (drawBot - drawTop) / 2;
+        return {
+          stage: 2, kind: "梯形", hint: cm + "厘米要化成米，求面積", reveal: "先把高化成米",
+          fig: figTrap(drawTop, drawBot, drawH, [
+            { t: "上底 " + top + "米", at: [drawBot / 2, drawH], side: "n" },
+            { t: "下底 " + bot + "米", at: [drawBot / 2, 0], side: "s" },
+            { t: "高 " + cm + "厘米", at: [inset, drawH / 2], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: "(" + top + "＋" + bot + ")×" + hM + "÷2＝" + area + " m²" },
+            { miss: "unit", label: "(" + top + "＋" + bot + ")×" + cm + "÷2＝" + ((top + bot) * cm / 2) + " m²", msg: "請先統一單位。請再計算。" },
+            { miss: "half", label: "(" + top + "＋" + bot + ")×" + hM + "＝" + (area * 2) + " m²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      function parenPara(base, less) {
+        const height = base - less;
+        const area = base * height;
+        return {
+          stage: 2, kind: "平行四邊形", hint: "高比底少" + less + "米，求面積", reveal: "先求高，再加括號",
+          fig: figPara(8, 5, [
+            { t: "底 " + base + "米", at: [4, 0], side: "s" },
+            { t: "高", at: [2, 2.5], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: base + "×(" + base + "−" + less + ")＝" + area + " m²" },
+            { miss: "paren", label: base + "×" + base + "−" + less + "＝" + (base * base - less) + " m²", msg: "請先加括號。請再計算。" },
+            { miss: "match", label: base + "×(" + base + "＋" + less + ")＝" + (base * (base + less)) + " m²", msg: "請用對應的高。請再計算。" }
+          ]
+        };
+      }
+      function parenTri(base, less) {
+        const height = base - less;
+        const area = base * height / 2;
+        const bare = base * base - less / 2;
+        const plus = base * (base + less) / 2;
+        return {
+          stage: 2, kind: "三角形", hint: "高比底少" + less + "米，求面積", reveal: "先求高，再加括號",
+          fig: figTri(8, 5, [
+            { t: "底 " + base + "米", at: [4, 0], side: "s" },
+            { t: "高", at: [0, 2.5], side: "w" }
+          ], true),
+          opts: [
+            { ok: true, label: base + "×(" + base + "−" + less + ")÷2＝" + area + " m²" },
+            { miss: "paren", label: base + "×" + base + "−" + less + "÷2＝" + bare + " m²", msg: "請先加括號。請再計算。" },
+            { miss: "match", label: base + "×(" + base + "＋" + less + ")÷2＝" + plus + " m²", msg: "請用對應的高。請再計算。" }
+          ]
+        };
+      }
+      function parenTrap(top, bot, less) {
+        const height = bot - less;
+        const area = (top + bot) * height / 2;
+        const bare = (top + bot) * bot - less / 2;
+        const plus = (top + bot) * (bot + less) / 2;
+        return {
+          stage: 2, kind: "梯形", hint: "高比下底少" + less + "米，求面積", reveal: "先求高，再加括號",
+          fig: figTrap(6, 10, 5, [
+            { t: "上底 " + top + "米", at: [5, 5], side: "n" },
+            { t: "下底 " + bot + "米", at: [5, 0], side: "s" },
+            { t: "高", at: [2, 2.5], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: "(" + top + "＋" + bot + ")×(" + bot + "−" + less + ")÷2＝" + area + " m²" },
+            { miss: "paren", label: "(" + top + "＋" + bot + ")×" + bot + "−" + less + "÷2＝" + bare + " m²", msg: "請先加括號。請再計算。" },
+            { miss: "match", label: "(" + top + "＋" + bot + ")×(" + bot + "＋" + less + ")÷2＝" + plus + " m²", msg: "請用對應的高。請再計算。" }
+          ]
+        };
+      }
+      function timesPara(height) {
+        const base = height * 2;
+        const area = base * height;
+        return {
+          stage: 2, kind: "平行四邊形", hint: "底是高的2倍，求面積", reveal: "底＝高×2",
+          fig: figPara(8, 5, [
+            { t: "底", at: [4, 0], side: "s" },
+            { t: "高 " + height + "米", at: [2, 2.5], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: height + "×2×" + height + "＝" + area + " m²" },
+            { miss: "match", label: height + "×" + height + "＝" + (height * height) + " m²", msg: "請用對應的底。請再計算。" },
+            { miss: "formula", label: height + "×2×" + height + "÷2＝" + (area / 2) + " m²", msg: "請用底×高。請再計算。" }
+          ]
+        };
+      }
+      function timesTri(height) {
+        const area = height * height;
+        return {
+          stage: 2, kind: "三角形", hint: "底是高的2倍，求面積", reveal: "底＝高×2",
+          fig: figTri(8, 5, [
+            { t: "底", at: [4, 0], side: "s" },
+            { t: "高 " + height + "米", at: [0, 2.5], side: "w" }
+          ], true),
+          opts: [
+            { ok: true, label: height + "×2×" + height + "÷2＝" + area + " m²" },
+            { miss: "match", label: height + "×" + height + "÷2＝" + (area / 2) + " m²", msg: "請用對應的底。請再計算。" },
+            { miss: "formula", label: height + "×2×" + height + "＝" + (area * 2) + " m²", msg: "請用底×高÷2。請再計算。" }
+          ]
+        };
+      }
+      function timesTrap(top, height) {
+        const area = (top + height * 2) * height / 2;
+        return {
+          stage: 2, kind: "梯形", hint: "下底是高的2倍，求面積", reveal: "下底＝高×2",
+          fig: figTrap(6, 10, 5, [
+            { t: "上底 " + top + "米", at: [5, 5], side: "n" },
+            { t: "下底", at: [5, 0], side: "s" },
+            { t: "高 " + height + "米", at: [2, 2.5], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: "(" + top + "＋" + height + "×2)×" + height + "÷2＝" + area + " m²" },
+            { miss: "match", label: "(" + top + "＋" + height + ")×" + height + "÷2＝" + ((top + height) * height / 2) + " m²", msg: "請用對應的底。請再計算。" },
+            { miss: "half", label: "(" + top + "＋" + height + "×2)×" + height + "＝" + (area * 2) + " m²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      function sidePara(area, height) {
+        const base = area / height;
+        return {
+          stage: 3, kind: "平行四邊形", hint: "已知面積和高，求底", reveal: "底＝面積÷高",
+          fig: figPara(8, 5, [
+            { t: "高 " + height + " cm", at: [2, 2.5], side: "e" },
+            { t: area + " cm²", at: [5.2, 2.4], side: "in" }
+          ]),
+          opts: [
+            { ok: true, label: area + "÷" + height + "＝" + base + " cm" },
+            { miss: "formula", label: area + "÷" + height + "÷2＝" + (base / 2) + " cm", msg: "請用面積÷高。請再計算。" },
+            { miss: "formula", label: area + "−" + height + "＝" + (area - height) + " cm", msg: "請用面積÷高。請再計算。" }
+          ]
+        };
+      }
+      function sideTri(area, height) {
+        const base = area * 2 / height;
+        return {
+          stage: 3, kind: "三角形", hint: "已知面積和高，求底", reveal: "底＝面積×2÷高",
+          fig: figTri(8, 5, [
+            { t: "高 " + height + " cm", at: [0, 2.5], side: "w" },
+            { t: area + " cm²", at: [3.2, 1.8], side: "in" }
+          ], true),
+          opts: [
+            { ok: true, label: area + "×2÷" + height + "＝" + base + " cm" },
+            { miss: "formula", label: area + "÷" + height + "＝" + (area / height) + " cm", msg: "請用面積×2÷高。請再計算。" },
+            { miss: "formula", label: area + "＋" + height + "＝" + (area + height) + " cm", msg: "請用面積×2÷高。請再計算。" }
+          ]
+        };
+      }
+      function sideTrap(area, height, top) {
+        const sum = area * 2 / height;
+        const bot = sum - top;
+        return {
+          stage: 3, kind: "梯形", hint: "已知面積和高，求下底", reveal: "下底＝面積×2÷高−上底",
+          fig: figTrap(6, 10, 5, [
+            { t: "上底 " + top + " cm", at: [5, 5], side: "n" },
+            { t: "高 " + height + " cm", at: [2, 2.5], side: "e" },
+            { t: area + " cm²", at: [5, 2.4], side: "in" }
+          ]),
+          opts: [
+            { ok: true, label: area + "×2÷" + height + "−" + top + "＝" + bot + " cm" },
+            { miss: "formula", label: area + "×2÷" + height + "＝" + sum + " cm", msg: "請再減上底。請再計算。" },
+            { miss: "formula", label: area + "−" + height + "＝" + (area - height) + " cm", msg: "請用面積×2÷高。請再計算。" }
+          ]
+        };
+      }
+      function qtyPara(b, h, rate, verb, measure, thing) {
+        const area = b * h;
+        const total = area * rate;
+        return {
+          stage: 3, kind: "平行四邊形",
+          hint: "每平方米" + verb + rate + measure + thing + "，共" + verb + "了" + thing + "多少" + measure + "？",
+          reveal: "先求面積，再乘數量",
+          fig: figPara(8, 5, [
+            { t: "底 " + b + "米", at: [4, 0], side: "s" },
+            { t: "高 " + h + "米", at: [2, 2.5], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: b + "×" + h + "×" + rate + "＝" + total + " " + measure },
+            { miss: "qty", label: b + "×" + h + "＝" + area + " " + measure, msg: "請再乘每平方米的數量。請再計算。" },
+            { miss: "area", label: b + "×" + rate + "＝" + (b * rate) + " " + measure, msg: "請先求面積。請再計算。" }
+          ]
+        };
+      }
+      function qtyTri(b, h, rate, verb, measure, thing) {
+        const area = b * h / 2;
+        const total = area * rate;
+        return {
+          stage: 3, kind: "三角形",
+          hint: "每平方米" + verb + rate + measure + thing + "，共" + verb + "了" + thing + "多少" + measure + "？",
+          reveal: "先求面積，再乘數量",
+          fig: figTri(8, 5, [
+            { t: "底 " + b + "米", at: [4, 0], side: "s" },
+            { t: "高 " + h + "米", at: [0, 2.5], side: "w" }
+          ], true),
+          opts: [
+            { ok: true, label: b + "×" + h + "÷2×" + rate + "＝" + total + " " + measure },
+            { miss: "half", label: b + "×" + h + "×" + rate + "＝" + (b * h * rate) + " " + measure, msg: "請記得除以2。請再計算。" },
+            { miss: "qty", label: b + "×" + h + "÷2＝" + area + " " + measure, msg: "請再乘每平方米的數量。請再計算。" }
+          ]
+        };
+      }
+      function qtyTrap(top, bot, h, rate, verb, measure, thing) {
+        const area = (top + bot) * h / 2;
+        const total = area * rate;
+        return {
+          stage: 3, kind: "梯形",
+          hint: "每平方米" + verb + rate + measure + thing + "，共" + verb + "了" + thing + "多少" + measure + "？",
+          reveal: "先求面積，再乘數量",
+          fig: figTrap(6, 10, 5, [
+            { t: "上底 " + top + "米", at: [5, 5], side: "n" },
+            { t: "下底 " + bot + "米", at: [5, 0], side: "s" },
+            { t: "高 " + h + "米", at: [2, 2.5], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: "(" + top + "＋" + bot + ")×" + h + "÷2×" + rate + "＝" + total + " " + measure },
+            { miss: "half", label: "(" + top + "＋" + bot + ")×" + h + "×" + rate + "＝" + ((top + bot) * h * rate) + " " + measure, msg: "請記得除以2。請再計算。" },
+            { miss: "qty", label: "(" + top + "＋" + bot + ")×" + h + "÷2＝" + area + " " + measure, msg: "請再乘每平方米的數量。請再計算。" }
+          ]
+        };
+      }
+      function figFour(b, h) {
+        const gap = Math.max(1.4, b * 0.35);
+        const x0 = b + gap;
+        return {
+          polys: [
+            { pts: [[0, 0], [b, 0], [0, h]], fill: FILL },
+            { pts: [[x0, 0], [x0 + 2 * b, 0], [x0, 2 * h]], fill: FILL }
+          ],
+          segs: [
+            [[x0 + b, 0], [x0, h]],
+            [[x0 + b, 0], [x0 + b, h]],
+            [[x0, h], [x0 + b, h]]
+          ],
+          rights: [{ c: [0, 0], a: [b, 0], b: [0, h] }],
+          arrows: [[[b + gap * 0.2, h * 0.45], [x0 - gap * 0.15, h * 0.45]]],
+          labels: [
+            { t: b + " cm", at: [b / 2, 0], side: "s" },
+            { t: h + " cm", at: [0, h / 2], side: "w" }
+          ]
+        };
+      }
+      function joinFour(b, h) {
+        const one = b * h / 2;
+        const all = one * 4;
+        return {
+          stage: 3, kind: "三角形", hint: "把4個三角形拼成一個大三角形，這個大三角形的面積是多少？", reveal: "大三角形面積＝4×小三角形面積",
+          fig: figFour(b, h),
+          opts: [
+            { ok: true, label: "4×(" + b + "×" + h + "÷2)＝" + all + " cm²" },
+            { miss: "join", label: b + "×" + h + "÷2＝" + one + " cm²", msg: "請計算拼合後的面積。請再計算。" },
+            { miss: "half", label: (b * 2) + "×" + (h * 2) + "＝" + (b * 2 * h * 2) + " cm²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      function joinPara(b, h) {
+        const one = b * h / 2;
+        const area = one * 2;
+        const gap = Math.max(2.2, b * 0.28);
+        const x0 = b + gap;
+        const y = h * 0.42;
+        const triX = b * (h - y) / h;
+        return {
+          stage: 3, kind: "平行四邊形",
+          hint: "把2個三角形拼成一個平行四邊形，這個平行四邊形的面積是多少？",
+          reveal: "平行四邊形面積＝2×三角形面積",
+          fig: {
+            polys: [
+              { pts: [[0, 0], [b, 0], [0, h]], fill: FILL },
+              { pts: [[x0 - b, h], [x0, h], [x0 + b, 0], [x0, 0]], fill: FILL }
+            ],
+            segs: [[[x0, 0], [x0, h]]],
+            rights: [
+              { c: [0, 0], a: [b, 0], b: [0, h] },
+              { c: [x0, 0], a: [x0 + b, 0], b: [x0, h] },
+              { c: [x0, h], a: [x0 - b, h], b: [x0, 0] }
+            ],
+            arrows: [[[triX + 0.25, y], [gap + triX - 0.25, y]]],
+            labels: [
+              { t: b + " cm", at: [b / 2, 0], side: "s" },
+              { t: h + " cm", at: [0, h / 2], side: "w" }
+            ]
+          },
+          opts: [
+            { ok: true, label: "2×(" + b + "×" + h + "÷2)＝" + area + " cm²" },
+            { miss: "join", label: b + "×" + h + "÷2＝" + one + " cm²", msg: "請計算拼合後的面積。請再計算。" },
+            { miss: "half", label: "2×(" + b + "×" + h + ")＝" + (b * h * 2) + " cm²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      function joinTrap(top, bot, h) {
+        const area = (top + bot) * h;
+        const one = area / 2;
+        const inset = (bot - top) / 2;
+        const gap = Math.max(2.2, bot * 0.22);
+        const x0 = bot + gap;
+        const y = h * 0.45;
+        return {
+          stage: 3, kind: "梯形",
+          hint: "把2個梯形拼成一個平行四邊形，這個平行四邊形的面積是多少？",
+          reveal: "平行四邊形面積＝(上底＋下底)×高",
+          fig: {
+            polys: [
+              { pts: [[0, 0], [bot, 0], [bot - inset, h], [inset, h]], fill: FILL },
+              { pts: [[x0, 0], [x0 + top + bot, 0], [x0 + top + bot + inset, h], [x0 + inset, h]], fill: FILL }
+            ],
+            segs: [[[x0 + bot, 0], [x0 + bot - inset, h]]],
+            dashes: [[[inset, 0], [inset, h]]],
+            rights: [{ c: [inset, 0], a: [bot, 0], b: [inset, h] }],
+            arrows: [[[bot - inset * y / h + 0.2, y], [x0 + inset * y / h - 0.2, y]]],
+            labels: [
+              { t: "上底 " + top + " cm", at: [bot / 2, h], side: "n" },
+              { t: "下底 " + bot + " cm", at: [bot / 2, 0], side: "s" },
+              { t: "高 " + h + " cm", at: [inset, h / 2], side: "e" }
+            ]
+          },
+          opts: [
+            { ok: true, label: "(" + top + "＋" + bot + ")×" + h + "＝" + area + " cm²" },
+            { miss: "join", label: "(" + top + "＋" + bot + ")×" + h + "÷2＝" + one + " cm²", msg: "請計算拼合後的面積。請再計算。" },
+            { miss: "join", label: bot + "×" + h + "＝" + (bot * h) + " cm²", msg: "請用上底加下底。請再計算。" }
+          ]
+        };
+      }
+      function figBerry(top, bot) {
+        const H = 5, Wtop = 8, Wbot = Wtop * (bot / top), x0 = Wtop - Wbot;
+        return {
+          polys: [{ pts: [[0, H], [Wtop, H], [Wtop, 0], [x0, 0]], fill: FILL }],
+          rights: [
+            { c: [Wtop, H], a: [0, H], b: [Wtop, 0] },
+            { c: [Wtop, 0], a: [Wtop, H], b: [x0, 0] }
+          ],
+          labels: [
+            { t: "上底 " + top + "米", at: [Wtop / 2, H], side: "n" },
+            { t: "下底 " + bot + "米", at: [(x0 + Wtop) / 2, 0], side: "s" },
+            { t: "斜邊 50米", at: [x0 / 2, H / 2], side: "w" }
+          ]
+        };
+      }
+      function periTrap(top, bot, peri) {
+        const slant = 50, height = peri - top - bot - slant;
+        const area = (top + bot) * height / 2;
+        const bySlant = (top + bot) * slant / 2;
+        const high = "(" + peri + "−" + top + "−" + bot + "−" + slant + ")";
+        return {
+          stage: 3, kind: "梯形", hint: "周界是" + peri + "米，面積是多少？", reveal: "先用周界求高",
+          fig: figBerry(top, bot),
+          opts: [
+            { ok: true, label: "(" + top + "＋" + bot + ")×" + high + "÷2＝" + area + " m²" },
+            { miss: "slant", label: "(" + top + "＋" + bot + ")×" + slant + "÷2＝" + bySlant + " m²", msg: "請用對應的高。請再計算。" },
+            { miss: "half", label: "(" + top + "＋" + bot + ")×" + high + "＝" + (area * 2) + " m²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      function periPara(peri, slant, height) {
+        const base = peri / 2 - slant;
+        const area = base * height;
+        return {
+          stage: 3, kind: "平行四邊形", hint: "周界是" + peri + "米，面積是多少？", reveal: "先用周界求底",
+          fig: figPara(8, 5, [
+            { t: "底", at: [4, 0], side: "s" },
+            { t: "斜邊 " + slant + "米", at: [1, 2.6], side: "w" },
+            { t: "高 " + height + "米", at: [2, 2.2], side: "e" }
+          ]),
+          opts: [
+            { ok: true, label: "(" + peri + "÷2−" + slant + ")×" + height + "＝" + area + " m²" },
+            { miss: "slant", label: slant + "×" + height + "＝" + (slant * height) + " m²", msg: "請用對應的底。請再計算。" },
+            { miss: "half", label: "(" + peri + "−" + slant + ")×" + height + "＝" + ((peri - slant) * height) + " m²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      function periTri(peri, slant, height) {
+        const base = peri - slant * 2;
+        const area = base * height / 2;
+        return {
+          stage: 3, kind: "三角形", hint: "周界是" + peri + "米，面積是多少？", reveal: "先用周界求底",
+          fig: {
+            polys: [{ pts: [[0, 0], [8, 0], [4, 5]], fill: FILL }],
+            dashes: [[[4, 0], [4, 5]]],
+            rights: [{ c: [4, 0], a: [0, 0], b: [4, 5] }],
+            labels: [
+              { t: "底", at: [4, 0], side: "s" },
+              { t: "高 " + height + "米", at: [4, 2.6], side: "e" },
+              { t: "斜邊 " + slant + "米", at: [1.3, 2.2], side: "w" },
+              { t: "斜邊 " + slant + "米", at: [6.7, 2.2], side: "e" }
+            ]
+          },
+          opts: [
+            { ok: true, label: "(" + peri + "−" + slant + "−" + slant + ")×" + height + "÷2＝" + area + " m²" },
+            { miss: "slant", label: slant + "×" + height + "÷2＝" + (slant * height / 2) + " m²", msg: "請用對應的底。請再計算。" },
+            { miss: "half", label: "(" + peri + "−" + slant + "−" + slant + ")×" + height + "＝" + (base * height) + " m²", msg: "請記得除以2。請再計算。" }
+          ]
+        };
+      }
+      const SLOTS = [
+        { id: "t1-para", group: 1, make: [() => directPara(12, 9), () => directPara(14, 8), () => directPara(15, 6)] },
+        { id: "t1-tri", group: 1, make: [() => directTri(12, 8), () => directTri(14, 6), () => directTri(16, 5)] },
+        { id: "t1-trap", group: 1, make: [() => directTrap(4, 8, 6), () => directTrap(5, 9, 4), () => directTrap(6, 10, 5)] },
+        { id: "t2-unit", byShape: {
+          "平行四邊形": [() => unitPara(5, 400), () => unitPara(6, 600), () => unitPara(4, 800)],
+          "三角形": [() => unitTri(6, 500), () => unitTri(8, 700), () => unitTri(4, 900)],
+          "梯形": [() => unitTrap(2, 3, 200), () => unitTrap(4, 6, 300), () => unitTrap(3, 5, 100)]
+        } },
+        { id: "t2-paren", byShape: {
+          "平行四邊形": [() => parenPara(12, 3), () => parenPara(15, 5), () => parenPara(18, 7)],
+          "三角形": [() => parenTri(20, 6), () => parenTri(24, 8), () => parenTri(16, 4)],
+          "梯形": [() => parenTrap(6, 10, 2), () => parenTrap(5, 15, 10), () => parenTrap(6, 18, 12)]
+        } },
+        { id: "t2-times", byShape: {
+          "平行四邊形": [() => timesPara(20), () => timesPara(15), () => timesPara(25)],
+          "三角形": [() => timesTri(12), () => timesTri(16), () => timesTri(18)],
+          "梯形": [() => timesTrap(6, 8), () => timesTrap(4, 10), () => timesTrap(6, 14)]
+        } },
+        { id: "t3-side", byShape: {
+          "平行四邊形": [() => sidePara(252, 14), () => sidePara(240, 15), () => sidePara(220, 11)],
+          "三角形": [() => sideTri(42, 7), () => sideTri(52, 4), () => sideTri(85, 5)],
+          "梯形": [() => sideTrap(550, 25, 21), () => sideTrap(575, 25, 19), () => sideTrap(621, 27, 21)]
+        } },
+        { id: "t3-qty", byShape: {
+          "平行四邊形": [
+            () => qtyPara(12, 8, 5, "擺放", "枝", "玫瑰花"),
+            () => qtyPara(11, 9, 4, "種", "棵", "鬱金香"),
+            () => qtyPara(15, 6, 3, "貼", "張", "貼紙")
+          ],
+          "三角形": [
+            () => qtyTri(10, 14, 13, "插", "枝", "菊花"),
+            () => qtyTri(16, 10, 13, "放", "枝", "百合"),
+            () => qtyTri(18, 20, 13, "種", "枝", "康乃馨")
+          ],
+          "梯形": [
+            () => qtyTrap(17, 23, 7, 2, "放", "盆", "盆栽"),
+            () => qtyTrap(19, 27, 7, 2, "種", "棵", "小樹"),
+            () => qtyTrap(29, 31, 7, 2, "掛", "盞", "燈")
+          ]
+        } },
+        { id: "t3-join", byShape: {
+          "三角形": [() => joinFour(4, 2), () => joinFour(6, 2), () => joinFour(4, 4)],
+          "平行四邊形": [() => joinPara(7, 10), () => joinPara(9, 14), () => joinPara(11, 10)],
+          "梯形": [() => joinTrap(5, 9, 6), () => joinTrap(7, 11, 4), () => joinTrap(8, 12, 5)]
+        } },
+        { id: "t3-peri", byShape: {
+          "梯形": [() => periTrap(50, 20, 160), () => periTrap(55, 25, 170), () => periTrap(46, 16, 152)],
+          "平行四邊形": [() => periPara(36, 7, 4), () => periPara(40, 9, 6), () => periPara(44, 8, 9)],
+          "三角形": [() => periTri(48, 18, 11), () => periTri(62, 22, 9), () => periTri(70, 24, 8)]
+        } }
+      ];
+
+      const state = {
+        classId: "", studentId: "", done: 0,
+        startedAt: 0, penalty: 0, elapsed: 0, ended: false, busy: false, sheetSent: false,
+        run: [], cursor: 0, q: null, opts: [],
+        vw: 0, vh: 0,
+        missFormula: 0, missUnit: 0, missParen: 0, missHalf: 0,
+        missSlant: 0, missMatch: 0, missArea: 0, missQty: 0, missJoin: 0
+      };
+      let audioCtx = null, countId = null;
+      const $ = (id) => document.getElementById(id);
+      const screens = { login: $("screen-login"), game: $("screen-game"), dash: $("screen-dash"), rank: $("screen-rank") };
+      const scene = $("scene");
+      const sceneCtx = scene.getContext("2d");
+
+      function showScreen(name) {
+        Object.keys(screens).forEach((k) => screens[k].classList.toggle("active", k === name));
+      }
+      function bounce(el) {
+        if (!el) return;
+        el.classList.remove("bounce");
+        void el.offsetWidth;
+        el.classList.add("bounce");
+      }
+      $("titleWave").innerHTML = [...TITLE].map((ch, i) =>
+        `<span style="display:inline-block;animation:floaty 2.4s ${i * 0.08}s ease-in-out infinite">${ch}</span>`
+      ).join("");
+
+      function loadStore() {
+        try {
+          const raw = localStorage.getItem(STORE_KEY);
+          if (!raw) return { students: {}, logs: [] };
+          const data = JSON.parse(raw);
+          return { students: data.students || {}, logs: Array.isArray(data.logs) ? data.logs : [] };
+        } catch (e) { return { students: {}, logs: [] }; }
+      }
+      function saveStore(data) { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+      function normalizeId(id) {
+        const raw = String(id || "").trim();
+        return /^\d+$/.test(raw) ? raw.padStart(2, "0") : raw;
+      }
+      function studentKey(c, s) { return `${c}__${normalizeId(s)}`; }
+      function nowText() {
+        const d = new Date();
+        const p = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+      }
+      function ensureStudent() {
+        const db = loadStore();
+        const key = studentKey(state.classId, state.studentId);
+        if (!db.students[key]) {
+          db.students[key] = { classId: state.classId, studentId: normalizeId(state.studentId) };
+          saveStore(db);
+        }
+        return key;
+      }
+      function missSum() {
+        return MISS_ORDER.reduce((n, k) => n + (state[MISS_KEY[k]] || 0), 0);
+      }
+      function diagnose() {
+        const items = [];
+        MISS_ORDER.forEach((k) => {
+          const n = state[MISS_KEY[k]] || 0;
+          if (n) items.push(`${MISS_LABEL[k]}（${n}次）`);
+        });
+        if (!items.length) return { short: "零失誤", sheet: "零失誤", tip: "零失誤\n🌟 做得好啊" };
+        const bullets = items.map((s) => "• " + s).join("\n");
+        return { short: bullets, sheet: bullets, tip: bullets + "\n💪 再接再厲吧" };
+      }
+      function sheetConfigured() {
+        return /^https:\/\/script\.google\.com\/macros\/s\/(?!YOUR_SCRIPT_ID\b)[^/]+\/exec\/?$/.test(GOOGLE_SHEET_URL);
+      }
+      function sendToGoogleSheet(d) {
+        if (state.sheetSent || !sheetConfigured()) return;
+        state.sheetSent = true;
+        const payload = {
+          game: GAME_ID,
+          chapter: CHAPTER,
+          student: `${state.classId} (${normalizeId(state.studentId)})`,
+          score: state.done,
+          avgTime: `${state.elapsed}秒`,
+          diagnostic: d.sheet
+        };
+        try {
+          fetch(GOOGLE_SHEET_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload)
+          }).catch(function () {});
+        } catch (err) {}
+      }
+
+      let sheetLogsCache = null, dashSeq = 0, dashAllLogs = [], rankSeq = 0;
+      let dashClass = "ALL";
+      let dashSort = { col: "student", dir: "asc" };
+      let dashFilters = {}, dashMenuCol = "";
+      const DASH_COLS = [
+        { key: "student", label: "班別學號", numeric: false },
+        { key: "score", label: "完成題數", numeric: true },
+        { key: "avg", label: "完成時間(秒)", numeric: true },
+        { key: "diagnosis", label: "診斷", numeric: false },
+        { key: "time", label: "時間", numeric: false }
+      ];
+      function parseSheetStudent(s) {
+        const m = String(s || "").match(/^(.+?)\s*\(([^)]+)\)/);
+        if (m) return { classId: m[1].trim(), studentId: normalizeId(m[2].trim()) };
+        return { classId: "", studentId: String(s || "").trim() };
+      }
+      function parseAvgSec(s) {
+        const m = String(s || "").match(/(\d+)/);
+        return m ? Number(m[1]) : 0;
+      }
+      function countErr(diagnostic, label) {
+        const m = String(diagnostic || "").match(new RegExp(label + "（(\\d+)次）"));
+        if (m) return Number(m[1]) || 0;
+        return new RegExp(label).test(diagnostic) ? 1 : 0;
+      }
+      function rowsToLogs(rows) {
+        return (rows || []).map((r) => {
+          const who = parseSheetStudent(r.student);
+          const diagnostic = String(r.diagnostic || "");
+          return {
+            classId: who.classId, studentId: who.studentId,
+            done: Number(r.score) || 0, avgSec: parseAvgSec(r.avgTime),
+            diagnosis: diagnostic,
+            unitErr: countErr(diagnostic, "單位未統一"),
+            parenErr: countErr(diagnostic, "漏加括號"),
+            time: r.time || "", game: r.game || r.chapter || ""
+          };
+        }).filter((e) => e.studentId || e.classId);
+      }
+      function jsonpSheet(url) {
+        return new Promise((resolve, reject) => {
+          const cb = "p5ch7Dash" + Date.now();
+          const s = document.createElement("script");
+          const timer = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 15000);
+          function cleanup() {
+            clearTimeout(timer);
+            try { delete window[cb]; } catch (err) { window[cb] = undefined; }
+            if (s.parentNode) s.parentNode.removeChild(s);
+          }
+          window[cb] = function (data) { cleanup(); resolve(data); };
+          s.onerror = function () { cleanup(); reject(new Error("script")); };
+          s.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "callback=" + cb;
+          document.body.appendChild(s);
+        });
+      }
+      async function loadSheetLogs(force) {
+        if (sheetLogsCache && !force) return sheetLogsCache;
+        if (!sheetConfigured()) throw new Error("no-url");
+        const url = GOOGLE_SHEET_URL + "?game=" + encodeURIComponent(GAME_ID);
+        let data = null;
+        try {
+          const res = await fetch(url, { method: "GET" });
+          if (!res.ok) throw new Error("http");
+          data = await res.json();
+        } catch (err) { data = await jsonpSheet(url); }
+        if (!data || !data.ok) throw new Error("bad");
+        sheetLogsCache = rowsToLogs(data.rows);
+        return sheetLogsCache;
+      }
+      function saveSession() {
+        const db = loadStore();
+        ensureStudent();
+        const d = diagnose();
+        db.logs.push({
+          classId: state.classId, studentId: normalizeId(state.studentId),
+          done: state.done, avgSec: state.elapsed, diagnosis: d.short,
+          unitErr: state.missUnit, parenErr: state.missParen, time: nowText()
+        });
+        saveStore(db);
+        return d;
+      }
+
+      function unlockAudio() {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      }
+      function tone(freq, dur, type, gain) {
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type || "sine"; o.frequency.value = freq; g.gain.value = gain || 0.05;
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.stop(audioCtx.currentTime + dur);
+      }
+      function sfx(kind) {
+        unlockAudio();
+        if (kind === "ok") {
+          tone(523, 0.1, "triangle");
+          setTimeout(() => tone(659, 0.1, "triangle"), 80);
+          setTimeout(() => tone(784, 0.16, "triangle"), 160);
+        } else if (kind === "bad") tone(180, 0.2, "sawtooth", 0.04);
+        else if (kind === "win") [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.14, "triangle"), i * 100));
+      }
+      function formatClock(sec) {
+        const s = Math.max(0, sec | 0);
+        return `${Math.floor(s / 60)}分${String(s % 60).padStart(2, "0")}秒`;
+      }
+      function currentElapsed() {
+        if (state.ended) return state.elapsed;
+        return state.penalty + Math.max(0, Math.floor((Date.now() - state.startedAt) / 1000));
+      }
+      function renderTimer() {
+        const s = currentElapsed();
+        $("timer").textContent = `⏱️ ${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+      }
+      function applyPenalty() {
+        if (state.ended) return;
+        state.penalty += PENALTY_SECS;
+        renderTimer();
+        const timer = $("timer"), hit = $("timeHit");
+        if (timer) {
+          timer.classList.remove("hit");
+          void timer.offsetWidth;
+          timer.classList.add("hit");
+          setTimeout(() => timer.classList.remove("hit"), 420);
+        }
+        if (hit) {
+          hit.classList.remove("show");
+          void hit.offsetWidth;
+          hit.classList.add("show");
+          setTimeout(() => hit.classList.remove("show"), 720);
+        }
+      }
+      function stopCountdown() { clearInterval(countId); countId = null; }
+      function startClock() {
+        stopCountdown();
+        state.startedAt = Date.now();
+        state.penalty = 0;
+        state.elapsed = 0;
+        state.ended = false;
+        renderTimer();
+        countId = setInterval(() => {
+          if (state.ended) return;
+          renderTimer();
+        }, 250);
+      }
+      function endSession() {
+        if (state.ended) return;
+        state.elapsed = state.penalty + Math.max(0, Math.floor((Date.now() - state.startedAt) / 1000));
+        state.ended = true;
+        renderTimer();
+        stopCountdown();
+        const d = saveSession();
+        sendToGoogleSheet(d);
+        const used = `用時 ${formatClock(state.elapsed)}`;
+        $("reportScore").textContent = state.done >= TOTAL ? used : `完成 ${state.done}／${TOTAL} 題，${used}`;
+        $("reportTip").textContent = d.tip;
+        $("reportModal").classList.add("show");
+        burstConfetti(180); sfx("win");
+      }
+      function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      }
+      function pickIndex(n, prev) {
+        const i0 = Number(prev);
+        if (!(n > 1) || !Number.isInteger(i0) || i0 < 0 || i0 >= n) return Math.floor(Math.random() * n);
+        let i = Math.floor(Math.random() * (n - 1));
+        if (i >= i0) i += 1;
+        return i;
+      }
+      function pickTwo(n, prev) {
+        const used = new Set();
+        const list = Array.isArray(prev) ? prev : (prev == null ? [] : [prev]);
+        list.forEach((v) => {
+          const i = Number(v);
+          if (i >= 0 && i < n) used.add(i);
+        });
+        const fresh = [], old = [];
+        for (let i = 0; i < n; i++) (used.has(i) ? old : fresh).push(i);
+        const order = shuffle(fresh).concat(shuffle(old));
+        return [order[0], order[1]];
+      }
+      function scatterKinds(items) {
+        for (let n = 0; n < 40; n++) {
+          const a = shuffle(items);
+          let apart = true;
+          for (let i = 1; i < a.length; i++) {
+            if (a[i].kind === a[i - 1].kind) { apart = false; break; }
+          }
+          if (apart) return a;
+        }
+        return shuffle(items);
+      }
+      function pickTwoShapes(prev) {
+        const shapes = ["平行四邊形", "三角形", "梯形"];
+        const last = prev && Array.isArray(prev.shapes) ? prev.shapes : [];
+        const fresh = shapes.filter((s) => !last.includes(s));
+        const old = shapes.filter((s) => last.includes(s));
+        return shuffle(fresh).concat(shuffle(old)).slice(0, 2);
+      }
+      function buildRun() {
+        const db = loadStore();
+        const key = studentKey(state.classId, state.studentId);
+        const stu = db.students[key] || {};
+        const seen = stu.seen || {};
+        const next = {};
+        const task1 = [];
+        const rest = [];
+        SLOTS.forEach((slot) => {
+          if (slot.byShape) {
+            const shapes = pickTwoShapes(seen[slot.id]);
+            const idx = {};
+            const prevIdx = seen[slot.id] && seen[slot.id].idx ? seen[slot.id].idx : {};
+            shapes.forEach((shape) => {
+              const variants = slot.byShape[shape];
+              idx[shape] = pickIndex(variants.length, prevIdx[shape]);
+              rest.push(variants[idx[shape]]());
+            });
+            next[slot.id] = { shapes, idx };
+            return;
+          }
+          const pair = pickTwo(slot.make.length, seen[slot.id]);
+          next[slot.id] = pair;
+          const made = pair.map((i) => slot.make[i]());
+          if (slot.group === 1) task1.push(...made);
+          else rest.push(...made);
+        });
+        state.run = scatterKinds(task1).concat(rest);
+        stu.seen = next;
+        db.students[key] = stu;
+        saveStore(db);
+        state.cursor = 0;
+      }
+      function setToast(ok, text) {
+        const el = $("feedToast");
+        el.className = "toast show " + (ok ? "good" : "bad");
+        el.textContent = text;
+      }
+      function clearToast() { $("feedToast").className = "toast"; $("feedToast").textContent = ""; }
+      function miss(kind, msg) {
+        const key = MISS_KEY[kind];
+        if (key) state[key] += 1;
+        setToast(false, msg);
+        sfx("bad");
+        applyPenalty();
+        const box = $("phase2Acts");
+        if (box) { box.classList.add("shake"); setTimeout(() => box.classList.remove("shake"), 400); }
+      }
+
+      function collectPts(fig) {
+        const pts = [];
+        (fig.polys || []).forEach((poly) => poly.pts.forEach((p) => pts.push(p)));
+        (fig.dashes || []).forEach((seg) => seg.forEach((p) => pts.push(p)));
+        (fig.segs || []).forEach((seg) => seg.forEach((p) => pts.push(p)));
+        (fig.arrows || []).forEach((seg) => seg.forEach((p) => pts.push(p)));
+        (fig.labels || []).forEach((lb) => pts.push(lb.at));
+        return pts;
+      }
+      function layoutOf(fig, W, H) {
+        const pts = collectPts(fig);
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        pts.forEach((p) => {
+          minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
+          minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
+        });
+        const bw = Math.max(0.001, maxX - minX);
+        const bh = Math.max(0.001, maxY - minY);
+        const padL = 78, padR = 78, padT = 36, padB = 46;
+        const cell = Math.min((W - padL - padR) / bw, (H - padT - padB) / bh);
+        const figW = bw * cell, figH = bh * cell;
+        const left = padL + Math.max(0, (W - padL - padR - figW) / 2);
+        const top = padT + Math.max(0, (H - padT - padB - figH) / 2);
+        const ox = left - minX * cell;
+        const oy = top + maxY * cell;
+        return {
+          cell: cell,
+          X: (p) => ox + p[0] * cell,
+          Y: (p) => oy - p[1] * cell,
+          ox: ox, oy: oy
+        };
+      }
+      function trace(ctx, pts, X, Y) {
+        ctx.beginPath();
+        pts.forEach((p, i) => { if (i) ctx.lineTo(X(p), Y(p)); else ctx.moveTo(X(p), Y(p)); });
+      }
+      function drawGrid(ctx, W, H, lay) {
+        const cell = lay.cell;
+        if (!(cell >= 8)) return;
+        ctx.save();
+        ctx.strokeStyle = "rgba(228, 184, 42, 0.28)";
+        ctx.lineWidth = 1;
+        let x = lay.ox;
+        while (x > 0) x -= cell;
+        for (; x <= W; x += cell) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+        }
+        let y = lay.oy;
+        while (y > 0) y -= cell;
+        for (; y <= H; y += cell) {
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+        ctx.restore();
+      }
+      function drawRight(ctx, mark, X, Y) {
+        const c = mark.c, a = mark.a, b = mark.b;
+        const ax = X(a) - X(c), ay = Y(a) - Y(c);
+        const bx = X(b) - X(c), by = Y(b) - Y(c);
+        const la = Math.hypot(ax, ay) || 1, lb = Math.hypot(bx, by) || 1;
+        const s = 13;
+        const p1x = X(c) + ax / la * s, p1y = Y(c) + ay / la * s;
+        const p3x = X(c) + bx / lb * s, p3y = Y(c) + by / lb * s;
+        ctx.beginPath();
+        ctx.moveTo(p1x, p1y);
+        ctx.lineTo(p1x + bx / lb * s, p1y + by / lb * s);
+        ctx.lineTo(p3x, p3y);
+        ctx.stroke();
+      }
+      function drawArrow(ctx, a, b, X, Y) {
+        const x1 = X(a), y1 = Y(a), x2 = X(b), y2 = Y(b);
+        const ang = Math.atan2(y2 - y1, x2 - x1);
+        ctx.save();
+        ctx.strokeStyle = "#ee4d93";
+        ctx.fillStyle = "#ee4d93";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        const s = 12;
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - s * Math.cos(ang - 0.45), y2 - s * Math.sin(ang - 0.45));
+        ctx.lineTo(x2 - s * Math.cos(ang + 0.45), y2 - s * Math.sin(ang + 0.45));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      function pillBox(ctx, text, x, y) {
+        ctx.font = "700 20px 'Noto Sans TC', sans-serif";
+        const tw = ctx.measureText(text).width;
+        const w = tw + 16, h = 28;
+        return { x: x - w / 2, y: y - h / 2, w: w, h: h, cx: x, cy: y };
+      }
+      function drawPill(ctx, text, box) {
+        ctx.save();
+        ctx.fillStyle = "rgba(255,255,255,0.94)";
+        ctx.strokeStyle = "#f0d7a2";
+        ctx.lineWidth = 2;
+        const r = 10, x = box.x, y = box.y, w = box.w, h = box.h;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#3b2a55";
+        ctx.font = "700 20px 'Noto Sans TC', sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, box.cx, box.cy + 1);
+        ctx.restore();
+      }
+      function overlaps(a, b) {
+        return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+      }
+      function drawLabels(ctx, labels, X, Y, W, H) {
+        const sideOf = {
+          n: [0, -32], s: [0, 34], w: [-40, 0], e: [40, 0],
+          ne: [34, -26], nw: [-34, -26], in: [0, 0]
+        };
+        const placed = [];
+        (labels || []).forEach((lb) => {
+          const off = sideOf[lb.side] || sideOf.s;
+          let cx = X(lb.at) + off[0];
+          let cy = Y(lb.at) + off[1];
+          let box = pillBox(ctx, lb.t, cx, cy);
+          for (let n = 0; n < 8; n++) {
+            const hit = placed.some((p) => overlaps(box, p.box));
+            if (!hit) break;
+            cy += 8;
+            cx += (lb.side === "w" || lb.side === "nw") ? -6 : 6;
+            box = pillBox(ctx, lb.t, cx, cy);
+          }
+          const m = 6;
+          if (box.x < m) { cx += m - box.x; box = pillBox(ctx, lb.t, cx, cy); }
+          if (box.y < m) { cy += m - box.y; box = pillBox(ctx, lb.t, cx, cy); }
+          if (box.x + box.w > W - m) { cx -= box.x + box.w - (W - m); box = pillBox(ctx, lb.t, cx, cy); }
+          if (box.y + box.h > H - m) { cy -= box.y + box.h - (H - m); box = pillBox(ctx, lb.t, cx, cy); }
+          placed.push({ text: lb.t, box: box });
+        });
+        placed.forEach((p) => drawPill(ctx, p.text, p.box));
+      }
+      function draw() {
+        const ctx = sceneCtx;
+        const W = state.vw, H = state.vh;
+        if (!ctx || !W || !H || !state.q) return;
+        ctx.clearRect(0, 0, W, H);
+        const fig = state.q.fig;
+        const lay = layoutOf(fig, W, H);
+        const X = lay.X, Y = lay.Y;
+        drawGrid(ctx, W, H, lay);
+        (fig.polys || []).forEach((poly) => {
+          trace(ctx, poly.pts, X, Y);
+          ctx.closePath();
+          ctx.fillStyle = poly.fill || FILL;
+          ctx.fill();
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = INK;
+          ctx.lineJoin = "round";
+          ctx.stroke();
+        });
+        (fig.segs || []).forEach((seg) => {
+          ctx.beginPath();
+          ctx.moveTo(X(seg[0]), Y(seg[0]));
+          ctx.lineTo(X(seg[1]), Y(seg[1]));
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = INK;
+          ctx.stroke();
+        });
+        ctx.save();
+        ctx.setLineDash([7, 6]);
+        ctx.strokeStyle = "#ee4d93";
+        ctx.lineWidth = 3;
+        (fig.dashes || []).forEach((seg) => {
+          ctx.beginPath();
+          ctx.moveTo(X(seg[0]), Y(seg[0]));
+          ctx.lineTo(X(seg[1]), Y(seg[1]));
+          ctx.stroke();
+        });
+        ctx.restore();
+        ctx.save();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 2.5;
+        (fig.rights || []).forEach((mark) => drawRight(ctx, mark, X, Y));
+        ctx.restore();
+        (fig.arrows || []).forEach((seg) => drawArrow(ctx, seg[0], seg[1], X, Y));
+        drawLabels(ctx, fig.labels, X, Y, W, H);
+      }
+      function layoutCanvas() {
+        const board = $("board");
+        const dpr = Math.max(1, window.devicePixelRatio || 1);
+        const w = Math.max(1, board.clientWidth);
+        const h = Math.max(1, board.clientHeight);
+        scene.width = Math.floor(w * dpr);
+        scene.height = Math.floor(h * dpr);
+        sceneCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        state.vw = w;
+        state.vh = h;
+      }
+      function showQuestion() {
+        if (state.ended) return;
+        const q = state.run[state.cursor];
+        if (!q) { endSession(); return; }
+        state.q = q;
+        state.opts = shuffle(q.opts);
+        $("taskTitle").textContent = STAGE_NAME[q.stage];
+        $("taskKind").textContent = q.kind;
+        $("hintBar").textContent = q.hint;
+        $("qPill").textContent = `第 ${state.cursor + 1}／${TOTAL} 題`;
+        $("playerPill").textContent = `${state.classId} ${normalizeId(state.studentId)}`;
+        clearToast();
+        const colors = ["lilac", "lemon", "mint"];
+        const box = $("phase2Acts");
+        box.classList.add("show");
+        box.innerHTML = state.opts.map((o, i) =>
+          `<button class="candy ${colors[i]}" data-i="${i}">${escapeHtml(o.label)}</button>`
+        ).join("");
+        layoutCanvas();
+        draw();
+      }
+      function succeed() {
+        if (state.busy || state.ended || !state.q) return;
+        state.busy = true;
+        clearToast();
+        sfx("ok");
+        state.done += 1;
+        state.cursor += 1;
+        $("hintBar").textContent = state.q.reveal;
+        burstConfetti(48);
+        setTimeout(() => {
+          if (state.ended) return;
+          state.busy = false;
+          if (state.cursor >= TOTAL) { endSession(); return; }
+          showQuestion();
+        }, 680);
+      }
+
+      function startGame() {
+        const classId = $("classId").value.trim().toUpperCase();
+        const studentId = $("studentId").value.trim();
+        if (!classId || !studentId) { bounce($("startBtn")); return; }
+        unlockAudio();
+        state.classId = classId; state.studentId = studentId;
+        state.done = 0;
+        state.ended = false; state.busy = false; state.sheetSent = false;
+        state.run = []; state.cursor = 0;
+        MISS_ORDER.forEach((k) => { state[MISS_KEY[k]] = 0; });
+        $("reportModal").classList.remove("show");
+        ensureStudent();
+        buildRun();
+        showScreen("game");
+        startClock();
+        requestAnimationFrame(() => showQuestion());
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"'`]/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;"
+        }[c]));
+      }
+      function cmpStudent(a, b) {
+        if (a.classId !== b.classId) return String(a.classId).localeCompare(String(b.classId), "zh-Hant");
+        const na = parseInt(a.studentId, 10), nb = parseInt(b.studentId, 10);
+        if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
+        return String(a.studentId).localeCompare(String(b.studentId), "zh-Hant", { numeric: true });
+      }
+      function timeDay(t) {
+        const s = String(t || "");
+        const m = s.match(/^\d{4}\/\d{2}\/\d{2}/);
+        return m ? m[0] : (s || "（空白）");
+      }
+      function colValue(key, e) {
+        if (key === "student") return `${e.classId} ${e.studentId}`.trim() || "（空白）";
+        if (key === "score") return String(e.done);
+        if (key === "avg") return e.avgSec ? String(e.avgSec) : "—";
+        if (key === "diagnosis") return e.diagnosis || "（空白）";
+        return timeDay(e.time);
+      }
+      function classLogs() {
+        if (!dashClass || dashClass === "ALL") return dashAllLogs;
+        return dashAllLogs.filter((e) => e.classId === dashClass);
+      }
+      function uniqueValues(key) {
+        const set = new Set();
+        classLogs().forEach((e) => set.add(colValue(key, e)));
+        const arr = [...set];
+        const spec = DASH_COLS.find((c) => c.key === key);
+        arr.sort((a, b) => {
+          if (spec && spec.numeric) {
+            const na = Number(a), nb = Number(b);
+            const fa = Number.isFinite(na), fb = Number.isFinite(nb);
+            if (fa && fb) return na - nb;
+            if (fa) return -1;
+            if (fb) return 1;
+          }
+          return String(a).localeCompare(String(b), "zh-Hant", { numeric: true });
+        });
+        return arr;
+      }
+      function filterActive(key) {
+        const sel = dashFilters[key];
+        return !!(sel && sel.size < uniqueValues(key).length);
+      }
+      function anyFilterOn() { return DASH_COLS.some((c) => filterActive(c.key)); }
+      function passesFilters(e) {
+        return DASH_COLS.every((col) => {
+          const sel = dashFilters[col.key];
+          if (!sel) return true;
+          return sel.has(colValue(col.key, e));
+        });
+      }
+      function sortLogs(logs) {
+        const col = dashSort.col;
+        const m = dashSort.dir === "asc" ? 1 : -1;
+        return logs.slice().sort((a, b) => {
+          let c = 0;
+          if (col === "score") c = a.done - b.done;
+          else if (col === "avg") c = (a.avgSec || 0) - (b.avgSec || 0);
+          else if (col === "student") c = cmpStudent(a, b);
+          else if (col === "time") c = String(a.time || "").localeCompare(String(b.time || ""));
+          else if (col === "diagnosis") c = String(a.diagnosis || "").localeCompare(String(b.diagnosis || ""), "zh-Hant");
+          return (c * m) || cmpStudent(a, b);
+        });
+      }
+      function sortMark(key) {
+        if (dashSort.col !== key) return "";
+        return dashSort.dir === "asc" ? " ▲" : " ▼";
+      }
+      function closeFilterMenu() {
+        dashMenuCol = "";
+        const menu = $("dashFilterMenu");
+        if (menu) menu.classList.remove("show");
+      }
+      function resetDashFilters() {
+        dashFilters = {};
+        dashSort = { col: "student", dir: "asc" };
+        dashClass = "ALL";
+        closeFilterMenu();
+      }
+      function placeFilterMenu(anchor) {
+        const menu = $("dashFilterMenu");
+        const r = anchor.getBoundingClientRect();
+        menu.classList.add("show");
+        const w = menu.offsetWidth || 260;
+        const h = menu.offsetHeight || 280;
+        let left = Math.min(r.left, window.innerWidth - w - 8);
+        let top = r.bottom + 4;
+        if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+        if (left < 8) left = 8;
+        menu.style.left = left + "px";
+        menu.style.top = top + "px";
+      }
+      function renderFilterMenu(key, q) {
+        const spec = DASH_COLS.find((c) => c.key === key);
+        if (!spec) return;
+        const values = uniqueValues(key);
+        const sel = dashFilters[key];
+        const query = String(q || "").trim();
+        const shown = query ? values.filter((v) => String(v).indexOf(query) !== -1) : values;
+        const allOn = !sel;
+        const sortDesc = key === "time" ? "新 → 舊" : (spec.numeric ? "由高到低" : "由 Z 到 A");
+        const sortAsc = key === "time" ? "舊 → 新" : (spec.numeric ? "由低到高" : "由 A 到 Z");
+        $("dashFilterMenu").innerHTML = `
+          <div class="fm-title">篩選：${escapeHtml(spec.label)}</div>
+          <div class="fm-acts">
+            <button type="button" data-fm="sort-desc">${sortDesc}</button>
+            <button type="button" data-fm="sort-asc">${sortAsc}</button>
+          </div>
+          <input type="search" id="fmSearch" placeholder="搜尋" value="${escapeHtml(query)}" />
+          <div class="fm-acts">
+            <button type="button" data-fm="all">全選</button>
+            <button type="button" data-fm="none">全不選</button>
+            <button type="button" data-fm="clear">清除此欄</button>
+          </div>
+          <div class="opts">
+            ${shown.map((v) => {
+              const on = allOn || sel.has(v);
+              const idx = values.indexOf(v);
+              return `<label><input type="checkbox" data-idx="${idx}" ${on ? "checked" : ""} />${escapeHtml(v)}</label>`;
+            }).join("") || `<div class="empty">沒有項目</div>`}
+          </div>
+        `;
+        const search = $("fmSearch");
+        if (search) {
+          search.focus();
+          const n = search.value.length;
+          try { search.setSelectionRange(n, n); } catch (err) {}
+        }
+      }
+      function openFilterMenu(key, anchor) {
+        dashMenuCol = key;
+        renderFilterMenu(key, "");
+        placeFilterMenu(anchor);
+      }
+      function setColFilter(key, nextSet) {
+        const all = uniqueValues(key);
+        if (!nextSet || nextSet.size === all.length) dashFilters[key] = null;
+        else dashFilters[key] = nextSet;
+        paintDash();
+        if (dashMenuCol === key) {
+          const q = ($("fmSearch") && $("fmSearch").value) || "";
+          renderFilterMenu(key, q);
+          const btn = document.querySelector(`.filter-btn[data-filter="${key}"]`);
+          if (btn) placeFilterMenu(btn);
+        }
+      }
+      function paintDash() {
+        DASH_COLS.forEach((col) => {
+          const sel = dashFilters[col.key];
+          if (!sel) return;
+          const all = new Set(uniqueValues(col.key));
+          const next = new Set([...sel].filter((v) => all.has(v)));
+          dashFilters[col.key] = next.size === all.size ? null : next;
+        });
+        const sourceEl = $("dashSource");
+        const base = classLogs();
+        const logs = base.filter(passesFilters);
+        const finished = logs.filter((e) => (e.done || 0) === TOTAL && e.avgSec);
+        const avgSec = finished.length ? Math.round(finished.reduce((n, e) => n + e.avgSec, 0) / finished.length) : 0;
+        const unitTotal = logs.reduce((n, e) => n + (e.unitErr || 0), 0);
+        const parenTotal = logs.reduce((n, e) => n + (e.parenErr || 0), 0);
+        const classes = [...new Set(dashAllLogs.map((s) => s.classId).filter(Boolean))].sort();
+        $("classFilter").innerHTML = `<option value="ALL">全部班別</option>` +
+          classes.map((c) => `<option value="${escapeHtml(c)}" ${c === dashClass ? "selected" : ""}>${escapeHtml(c)}</option>`).join("");
+        $("analysisCards").innerHTML = `
+          <div class="stat s1"><b>平均完成時間</b><strong>${finished.length ? formatClock(avgSec) : "—"}</strong></div>
+          <div class="stat s2"><b>單位未統一</b><strong>${unitTotal}</strong></div>
+          <div class="stat s3"><b>漏加括號</b><strong>${parenTotal}</strong></div>
+        `;
+        if ($("dashCount")) $("dashCount").textContent = dashAllLogs.length ? `顯示 ${logs.length} / ${base.length} 筆` : "";
+        if ($("clearFiltersBtn")) $("clearFiltersBtn").style.visibility = anyFilterOn() ? "visible" : "hidden";
+        if (!dashAllLogs.length) {
+          $("studentRecords").innerHTML = `<div class="empty">${sourceEl && sourceEl.textContent.indexOf("未能") >= 0 ? "未能連線 Google 試算表" : "未有紀錄"}</div>`;
+          return;
+        }
+        const ranked = sortLogs(logs);
+        const scores = ranked.map((e) => e.done || 0).slice().sort((a, b) => a - b);
+        const hiCut = scores.length ? scores[Math.max(0, scores.length - Math.ceil(scores.length * 0.2))] || 0 : 0;
+        const loCut = scores.length ? scores[Math.min(scores.length - 1, Math.floor(scores.length * 0.2))] || 0 : 0;
+        const showRank = dashSort.col === "score";
+        const head = (key, extra) => {
+          const spec = DASH_COLS.find((c) => c.key === key);
+          const on = filterActive(key);
+          const sorted = dashSort.col === key ? " sorted" : "";
+          return `<th class="col-h${extra || ""}${sorted}" data-col="${key}">
+            <button type="button" class="col-sort" data-sort="${key}">${escapeHtml(spec.label)}${sortMark(key)}</button>
+            <button type="button" class="filter-btn${on ? " on" : ""}" data-filter="${key}" aria-label="篩選${escapeHtml(spec.label)}">▼</button>
+          </th>`;
+        };
+        const body = ranked.length ? ranked.map((e, i) => {
+          const rank = dashSort.dir === "asc" ? ranked.length - i : i + 1;
+          const hi = e.done >= hiCut && e.done > 0;
+          const lo = e.done <= loCut;
+          return `<tr class="${hi ? "hi" : lo ? "lo" : ""}">
+            ${showRank ? `<td class="rank-cell">${rank}</td>` : ""}
+            <td>${escapeHtml(e.classId)} ${escapeHtml(e.studentId)}</td>
+            <td class="score-cell">${e.done}</td>
+            <td>${e.avgSec || "—"}</td>
+            <td class="diag-cell">${escapeHtml(e.diagnosis)}</td>
+            <td>${escapeHtml(e.time)}</td>
+          </tr>`;
+        }).join("") : `<tr><td colspan="${showRank ? 6 : 5}" class="empty">此篩選沒有紀錄，可再按 ▼ 更改篩選</td></tr>`;
+        $("studentRecords").innerHTML = `<table>
+          <thead><tr>
+            ${showRank ? `<th class="score-h">名次</th>` : ""}
+            ${head("student")}
+            ${head("score", " score-h")}
+            ${head("avg")}
+            ${head("diagnosis")}
+            ${head("time")}
+          </tr></thead>
+          <tbody>${body}</tbody>
+        </table>`;
+      }
+      function bestPerStudent(logs) {
+        const map = new Map();
+        (logs || []).forEach((e) => {
+          if ((e.done || 0) !== TOTAL) return;
+          if (!e.studentId && !e.classId) return;
+          const key = studentKey(e.classId, e.studentId);
+          const prev = map.get(key);
+          const better = !prev || (e.avgSec || 99999) < (prev.avgSec || 99999);
+          if (better) map.set(key, e);
+        });
+        return [...map.values()]
+          .sort((a, b) => {
+            const ta = a.avgSec || 99999, tb = b.avgSec || 99999;
+            if (ta !== tb) return ta - tb;
+            return cmpStudent(a, b);
+          })
+          .slice(0, 10);
+      }
+      async function renderRank(force) {
+        const seq = ++rankSeq;
+        const box = $("rankRecords");
+        if (!box) return;
+        box.innerHTML = `<div class="empty">載入排行榜…</div>`;
+        let logs = [];
+        let fail = false;
+        try { logs = await loadSheetLogs(!!force); }
+        catch (err) { fail = true; }
+        if (seq !== rankSeq) return;
+        if (fail) {
+          box.innerHTML = `<div class="empty">未能連線</div>`;
+          return;
+        }
+        const top = bestPerStudent(logs);
+        if (!top.length) {
+          box.innerHTML = `<div class="empty">未有紀錄</div>`;
+          return;
+        }
+        const ranks = [];
+        top.forEach((e, i) => {
+          ranks.push(i > 0 && (e.avgSec || 0) === (top[i - 1].avgSec || 0) ? ranks[i - 1] : i + 1);
+        });
+        box.innerHTML = `<table>
+          <thead><tr>
+            <th class="score-h">名次</th>
+            <th>班別學號</th>
+            <th class="score-h">用時</th>
+          </tr></thead>
+          <tbody>${top.map((e, i) => {
+            const n = ranks[i];
+            const cls = n === 1 ? "r1" : n === 2 ? "r2" : n === 3 ? "r3" : "";
+            return `<tr class="${cls}">
+              <td class="rank-cell">${n}</td>
+              <td>${escapeHtml(e.classId)} ${escapeHtml(e.studentId)}</td>
+              <td class="score-cell">${formatClock(e.avgSec || 0)}</td>
+            </tr>`;
+          }).join("")}</tbody>
+        </table>`;
+      }
+      async function renderDashboard(filterClass, force) {
+        const seq = ++dashSeq;
+        if (filterClass) dashClass = filterClass;
+        $("studentRecords").innerHTML = `<div class="empty">載入全班分數…</div>`;
+        $("analysisCards").innerHTML = `
+          <div class="stat s1"><b>平均完成時間</b><strong>…</strong></div>
+          <div class="stat s2"><b>單位未統一</b><strong>…</strong></div>
+          <div class="stat s3"><b>漏加括號</b><strong>…</strong></div>
+        `;
+        let source = "";
+        try { dashAllLogs = await loadSheetLogs(!!force); source = "Google 試算表"; }
+        catch (err) { dashAllLogs = loadStore().logs; source = "本機（未能連線試算表）"; }
+        if (seq !== dashSeq) return;
+        if ($("dashSource")) $("dashSource").textContent = source;
+        paintDash();
+      }
+
+      const confetti = $("confetti");
+      const cfx = confetti.getContext("2d");
+      let pieces = [];
+      function resizeConfetti() { confetti.width = window.innerWidth; confetti.height = window.innerHeight; }
+      function burstConfetti(count) {
+        const colors = ["#ff7eb6", "#5cc8ff", "#ffe066", "#c9b6ff", "#7eecc8"];
+        for (let i = 0; i < count; i++) {
+          pieces.push({
+            x: confetti.width * (0.2 + Math.random() * 0.6), y: -12,
+            r: 4 + Math.random() * 6, c: colors[i % colors.length],
+            vx: -3 + Math.random() * 6, vy: 3 + Math.random() * 5,
+            rot: Math.random() * 360, vr: -8 + Math.random() * 16,
+            life: 80 + Math.random() * 40, shape: i % 3
+          });
+        }
+      }
+      (function tick() {
+        cfx.clearRect(0, 0, confetti.width, confetti.height);
+        pieces = pieces.filter((p) => p.life > 0);
+        pieces.forEach((p) => {
+          p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.rot += p.vr; p.life -= 1;
+          cfx.save(); cfx.translate(p.x, p.y); cfx.rotate(p.rot * Math.PI / 180);
+          cfx.globalAlpha = Math.max(0, p.life / 70); cfx.fillStyle = p.c;
+          if (p.shape === 0) cfx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+          else if (p.shape === 1) { cfx.beginPath(); cfx.arc(0, 0, p.r, 0, Math.PI * 2); cfx.fill(); }
+          else { cfx.beginPath(); cfx.moveTo(0, -p.r); cfx.lineTo(p.r, p.r); cfx.lineTo(-p.r, p.r); cfx.fill(); }
+          cfx.restore();
+        });
+        requestAnimationFrame(tick);
+      })();
+      resizeConfetti();
+      window.addEventListener("resize", () => {
+        resizeConfetti();
+        if (screens.game.classList.contains("active")) {
+          layoutCanvas();
+          draw();
+        }
+      });
+      if (window.ResizeObserver && $("board")) {
+        new ResizeObserver(() => {
+          if (!screens.game.classList.contains("active")) return;
+          if (!state.q) return;
+          layoutCanvas();
+          draw();
+        }).observe($("board"));
+      }
+
+      $("startBtn").addEventListener("click", startGame);
+      $("classId").addEventListener("keydown", (e) => { if (e.key === "Enter") $("studentId").focus(); });
+      $("studentId").addEventListener("keydown", (e) => { if (e.key === "Enter") startGame(); });
+      $("rankBtn").addEventListener("click", () => { showScreen("rank"); renderRank(true); });
+      $("rankBackBtn").addEventListener("click", () => showScreen("login"));
+      $("rankRefreshBtn").addEventListener("click", () => renderRank(true));
+      $("teacherBtn").addEventListener("click", () => {
+        $("pinModal").classList.add("show");
+        $("pinInput").value = "";
+        $("pinInput").focus();
+      });
+      $("pinCancel").addEventListener("click", () => $("pinModal").classList.remove("show"));
+      $("pinOk").addEventListener("click", () => {
+        if ($("pinInput").value === TEACHER_PIN) {
+          $("pinModal").classList.remove("show");
+          resetDashFilters();
+          showScreen("dash");
+          renderDashboard("ALL", true);
+        } else {
+          bounce($("pinInput"));
+          $("pinInput").classList.add("shake");
+          setTimeout(() => $("pinInput").classList.remove("shake"), 400);
+          $("pinInput").value = "";
+        }
+      });
+      $("pinInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("pinOk").click(); });
+      $("dashBackBtn").addEventListener("click", () => { closeFilterMenu(); showScreen("login"); });
+      $("backLoginBtn").addEventListener("click", () => {
+        if (!state.ended && (state.done > 0 || missSum() > 0)) {
+          endSession();
+          return;
+        }
+        stopCountdown();
+        $("studentId").value = "";
+        $("reportModal").classList.remove("show");
+        showScreen("login");
+        $("studentId").focus();
+      });
+      $("reportBackBtn").addEventListener("click", () => {
+        $("reportModal").classList.remove("show");
+        $("studentId").value = "";
+        showScreen("login");
+        $("studentId").focus();
+      });
+      $("printBtn").addEventListener("click", () => window.print());
+      $("classFilter").addEventListener("change", (e) => {
+        dashClass = e.target.value || "ALL";
+        closeFilterMenu();
+        paintDash();
+      });
+      $("clearFiltersBtn").addEventListener("click", () => {
+        dashFilters = {};
+        closeFilterMenu();
+        paintDash();
+      });
+      $("studentRecords").addEventListener("click", (e) => {
+        const fb = e.target.closest(".filter-btn");
+        if (fb) {
+          e.stopPropagation();
+          const key = fb.getAttribute("data-filter");
+          if (dashMenuCol === key && $("dashFilterMenu").classList.contains("show")) closeFilterMenu();
+          else openFilterMenu(key, fb);
+          return;
+        }
+        const sb = e.target.closest(".col-sort");
+        if (!sb) return;
+        const key = sb.getAttribute("data-sort");
+        if (dashSort.col === key) dashSort.dir = dashSort.dir === "desc" ? "asc" : "desc";
+        else dashSort = { col: key, dir: (key === "student" || key === "diagnosis") ? "asc" : "desc" };
+        paintDash();
+      });
+      $("dashFilterMenu").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-fm]");
+        if (!btn || !dashMenuCol) return;
+        const act = btn.getAttribute("data-fm");
+        const key = dashMenuCol;
+        if (act === "sort-desc") { dashSort = { col: key, dir: "desc" }; paintDash(); }
+        else if (act === "sort-asc") { dashSort = { col: key, dir: "asc" }; paintDash(); }
+        else if (act === "all" || act === "clear") setColFilter(key, null);
+        else if (act === "none") setColFilter(key, new Set());
+        if (act === "sort-desc" || act === "sort-asc") {
+          const anchor = document.querySelector(`.filter-btn[data-filter="${key}"]`);
+          if (anchor) placeFilterMenu(anchor);
+        }
+      });
+      $("dashFilterMenu").addEventListener("change", (e) => {
+        const inp = e.target;
+        if (!inp.matches || !inp.matches("input[type='checkbox'][data-idx]")) return;
+        const key = dashMenuCol;
+        const values = uniqueValues(key);
+        const val = values[Number(inp.getAttribute("data-idx"))];
+        if (val == null) return;
+        const sel = dashFilters[key] ? new Set(dashFilters[key]) : new Set(values);
+        if (inp.checked) sel.add(val); else sel.delete(val);
+        setColFilter(key, sel);
+      });
+      $("dashFilterMenu").addEventListener("input", (e) => {
+        if (e.target.id !== "fmSearch" || !dashMenuCol) return;
+        renderFilterMenu(dashMenuCol, e.target.value);
+        const btn = document.querySelector(`.filter-btn[data-filter="${dashMenuCol}"]`);
+        if (btn) placeFilterMenu(btn);
+      });
+      document.addEventListener("click", (e) => {
+        const menu = $("dashFilterMenu");
+        if (!menu || !menu.classList.contains("show")) return;
+        if (menu.contains(e.target) || e.target.closest(".filter-btn")) return;
+        closeFilterMenu();
+      });
+      $("refreshDashBtn").addEventListener("click", () => renderDashboard($("classFilter").value || "ALL", true));
+      $("phase2Acts").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-i]");
+        if (!btn || state.busy || state.ended || !state.q) return;
+        const opt = state.opts[Number(btn.getAttribute("data-i"))];
+        if (!opt) return;
+        if (opt.ok) succeed();
+        else miss(opt.miss, opt.msg);
+      });
+    })();
+  </script>
+</body>
+</html>
